@@ -1,0 +1,15 @@
+.input {
+  padding: 12px 20px;
+  max-width: 300px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  font-size: 16px;
+
+  @media (max-width: 660px) {
+    order: 3;
+  }
+
+  &:focus {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+  }
+}
