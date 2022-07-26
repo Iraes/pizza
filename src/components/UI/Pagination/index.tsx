@@ -4,7 +4,7 @@ import {useSelector} from "react-redux";
 import {FC} from "react";
 import {selectFilter} from "../../redux/slices/filterSlice";
 
-const Pagination: FC<{onChangePage: any}> = ({onChangePage}) => {
+const Pagination: FC<{onChangePage: (id: number) => void}> = ({onChangePage}) => {
   const {currentPage} = useSelector(selectFilter)
   return (
     <div>

@@ -1,32 +1,41 @@
-import {FC, useContext, useEffect, useRef, useState} from "react";
-import {useSelector, useDispatch} from "react-redux";
-import {useNavigate} from "react-router-dom";
+import { FC, useContext, useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import qs from "qs";
 
 import Categories from "../components/Categories";
-import Sort, {list} from "../components/Sort";
+import SortPopup, { list } from "../components/Sort";
 import MyLoader from "../components/UI/MyLoader";
 import PizzaBlock from "../components/PizzaBlock";
 import Pagination from "../components/UI/Pagination";
-import {
+import FilterSlice, {
   selectFilter,
   setCategoryId,
   setCurrentPage,
   setFilters,
 } from "../components/redux/slices/filterSlice";
-import {fetchPizzas, selectPizzaData} from "../components/redux/slices/pizzaSlice";
+import {
+  fetchPizzas,
+  selectPizzaData,
+} from "../components/redux/slices/pizzaSlice";
+import { useAppDispatch } from "../components/redux/store";
+import {
+  FetchPizzasArgs,
+  IFilterSliceState,
+  Sort,
+} from "../components/redux/@types";
 
 const Home: FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const isSearch = useRef(false);
   const isMounted = useRef(false);
 
-  const {categoryId, sort, currentPage, searchValue} = useSelector(selectFilter);
-  const {items, status} = useSelector(selectPizzaData);
+  const { categoryId, sort, currentPage, searchValue } =
+    useSelector(selectFilter);
+  const { items, status } = useSelector(selectPizzaData);
 
   const getPizzas = async (): Promise<void> => {
-
     const category = categoryId ? `&category=${categoryId}` : "";
     const order = sort.sortProperty.includes("-") ? "asc" : "desc";
     const sortBy = sort.sortProperty.replace("-", "");
@@ -37,14 +46,14 @@ const Home: FC = () => {
     const search = searchValue ? `&search=${searchValue}` : "";
 
     dispatch(
-      //@ts-ignore
       fetchPizzas({
-      category,
-      order,
-      sortBy,
-      search,
-      currentPage,
-    }));
+        category,
+        order,
+        sortBy,
+        search,
+        currentPage,
+      })
+    );
 
     window.scroll(0, 0);
   };
@@ -52,18 +61,26 @@ const Home: FC = () => {
   // При первом рендере проверяем URL-араметры и сохраняем в редаксе
   useEffect(() => {
     if (window.location.search) {
-      const params = qs.parse(window.location.search.substring(1));
-      const sort = list.find((obj) => obj.sortProperty === params.sortProperty);
-      dispatch(setFilters({...params, sort}));
+      const params = qs.parse(
+        window.location.search.substring(1)
+      ) as unknown as FetchPizzasArgs;
+      const sort = list.find((obj) => obj.sortProperty === params.sortBy);
+      dispatch(
+        setFilters({
+          currentPage: params.currentPage,
+          sort: sort || list[0],
+          searchValue: params.search,
+          categoryId: Number(params.category),
+        })
+      );
       isSearch.current = true;
     }
   }, []);
 
   //Если был первый рендер, то отправляем запросы на пиццы
   useEffect(() => {
-    getPizzas()
+    getPizzas();
     // isSearch.current = false;
-
   }, [categoryId, sort, searchValue, currentPage]);
 
   //При первом ренедере не вшивать в URL-параметры никакие данные.
@@ -98,7 +115,7 @@ const Home: FC = () => {
     return <PizzaBlock key={pizza.title} {...pizza} />;
   });
 
-  const loader = [...new Array(6)].map((_, index) => <MyLoader key={index}/>);
+  const loader = [...new Array(6)].map((_, index) => <MyLoader key={index} />);
 
   const onChangeCategory = (id: number) => {
     dispatch(setCategoryId(id));
@@ -107,17 +124,28 @@ const Home: FC = () => {
   return (
     <div className="container">
       <div className="content__top">
-        <Categories category={categoryId} onChangeCategory={onChangeCategory}/>
-        <Sort/>
+        <Categories category={categoryId} onChangeCategory={onChangeCategory} />
+        <SortPopup />
       </div>
       <h2 className="content__title">Все пиццы</h2>
-      {status === "error"
-        ? <div className="content__error-info">
-          <h2>Ой, произошла ошибка! <span>😕</span></h2>
-          <p>Вероятней всего, мы не смогли получить список пицц.<br/> Подождите немного и обновите страницу.</p></div>
-        : <div className="content__items">{status === "loading" ? loader : pizzas}</div>
-      }
-      <Pagination onChangePage={(number: number) => dispatch(setCurrentPage(number))}/>
+      {status === "error" ? (
+        <div className="content__error-info">
+          <h2>
+            Ой, произошла ошибка! <span>😕</span>
+          </h2>
+          <p>
+            Вероятней всего, мы не смогли получить список пицц.
+            <br /> Подождите немного и обновите страницу.
+          </p>
+        </div>
+      ) : (
+        <div className="content__items">
+          {status === "loading" ? loader : pizzas}
+        </div>
+      )}
+      <Pagination
+        onChangePage={(number: number) => dispatch(setCurrentPage(number))}
+      />
     </div>
   );
 };

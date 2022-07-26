@@ -1,15 +1,11 @@
 import React, { useEffect, useRef, useState} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { selectSort, setSortType } from "../redux/slices/filterSlice";
-
-interface IList {
-  name: string;
-  sortProperty: string;
-}
+import {Sort} from "../redux/@types";
 
 type PopupClick = MouseEvent & { path: Node[]};
 
-export const list: Array<IList> = [
+export const list: Array<Sort> = [
   { name: "популярности (DESC)", sortProperty: "rating" },
   { name: "популярности (ASC)", sortProperty: "-rating" },
   { name: "цене(DESC)", sortProperty: "price" },
@@ -18,14 +14,14 @@ export const list: Array<IList> = [
   { name: "алфавиту (ASC)", sortProperty: "-title" },
 ];
 
-const Sort = () => {
+const SortPopup = () => {
   const dispatch = useDispatch();
   const selected = useSelector(selectSort);
   const sortRef = useRef<HTMLDivElement>(null);
 
   const [open, setOpen] = useState(false);
 
-  const onClickItem: (obj: IList) => void = (obj) => {
+  const onClickItem: (obj: Sort) => void = (obj) => {
     dispatch(setSortType(obj));
     setOpen(!open);
   };
@@ -84,4 +80,4 @@ const Sort = () => {
   );
 };
 
-export default Sort;
+export default SortPopup;
